@@ -7,7 +7,7 @@ import com.pastukhov.chucknorris.di.DaggerAppComponent
 class App : Application() {
 
     companion object {
-        lateinit var appComponent: AppComponent
+         var appComponent: AppComponent? = null
     }
 
     override fun onCreate() {

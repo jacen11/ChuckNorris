@@ -20,37 +20,34 @@ class MainActivity : AppCompatActivity(), IMainView {
 
     override fun onCreate(savedInstanceState: Bundle?) {
 
-        App.appComponent.inject(this)
+        App.appComponent?.inject(this)
 
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        presenter.attachView(this)
 
-        val randomJokeRxJava: RandomJokeModel = presenter.getRandomJokeRxJava()
 
-//        interactor.getData()
-//            .subscribeOn()
-//            .observeOn()
-//            .subscribe(
-//                onNext = {
-//                    view.showResul()
-//                },
-//                onComplete{ },
-//                onErrro{}
-//            )
+        btn.setOnClickListener {
+            presenter.getRandomJokeRxJava()
+        }
     }
 
     override fun onDestroy() {
         super.onDestroy()
 
         if (isFinishing) {
-
+            App.appComponent = null
         }
     }
 
     fun getRandomJoke(view: View) {
         textView.text = presenter.getRandomJokeCoroutine().value
-        textView2.text = presenter.getRandomJokeRxJava().value
+//        textView2.text = presenter.getRandomJokeRxJava().value
 
+    }
+
+    override fun setText2(txt: String) {
+        textView2.text = txt
     }
 }

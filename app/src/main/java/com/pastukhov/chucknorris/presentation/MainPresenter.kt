@@ -1,27 +1,38 @@
 package com.pastukhov.chucknorris.presentation
 
-import com.pastukhov.chucknorris.App
+import android.util.Log
 import com.pastukhov.chucknorris.data.ChackNorrisServiceForCoroutine
-import com.pastukhov.chucknorris.data.ChackNorrisServiceForRxJava
+import com.pastukhov.chucknorris.data.ChackNorrisService
 import com.pastukhov.chucknorris.data.model.RandomJokeModel
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.disposables.CompositeDisposable
+import io.reactivex.schedulers.Schedulers
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
-import retrofit2.Response
-import java.util.*
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class MainPresenter @Inject constructor(
     var chackNorrisServiceForCoroutine: ChackNorrisServiceForCoroutine,
-    var chackNorrisServiceForRxJava: ChackNorrisServiceForRxJava
+    var chackNorrisService: ChackNorrisService
 ) : IMainPresenter {
 
     var jokeModel: RandomJokeModel = RandomJokeModel("0", "0")
 
+    private var view: IMainView? = null
 
+    override fun attachView(view: IMainView) {
+        this.view = view
+    }
+
+    override fun detachView() {
+        this.view = null
+    }
+
+    private val compositeDisposable = CompositeDisposable()
 
     override fun getRandomJokeCoroutine(): RandomJokeModel {
         CoroutineScope(Job() + Dispatchers.Main).launch {
@@ -36,15 +47,20 @@ class MainPresenter @Inject constructor(
         return jokeModel
     }
 
-    override fun getRandomJokeRxJava(): RandomJokeModel {
-
-        val randomJoke: Observable = chackNorrisServiceForRxJava.getRandomJoke()
-
-
-//        if (execute.isSuccessful){
-//            return execute.body()?: RandomJokeModel("1","1")
-//        }
-
-        return RandomJokeModel("1","1")
+    override fun getRandomJokeRxJava() {
+        compositeDisposable.add(
+            chackNorrisService.getRandomJoke()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(
+                    {
+                        view?.setText2(it.value)
+                        Log.d("zavanton", "zavanton - joke: $it")
+                    },
+                    {
+                        Log.e("zavanton", "zavanton - error: $it")
+                    }
+                )
+        )
     }
 }
